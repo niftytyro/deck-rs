@@ -1,100 +1,55 @@
-use super::deck;
-use crossterm::{
-    cursor,
-    event::{self, Event, KeyCode, KeyEvent},
-    execute, queue,
-    style::{self, Print},
-    terminal::{self, disable_raw_mode, enable_raw_mode, ClearType},
-    Result,
-};
-use std::io::{self, Write};
+use crate::app::{App, Slide};
+use tui::layout::{Constraint, Layout, Rect};
+use tui::style::{Color, Modifier, Style};
+use tui::text::{Span, Spans};
+use tui::widgets::{Block, Paragraph, Wrap};
+use tui::{backend::Backend, Frame};
 
-const ERROR_MESSAGE: &str = "Something went wrong";
+pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+    let current_slide = &app.slides[app.current_idx];
+    render_slide(f, current_slide);
+}
 
-pub fn run() {
-    let mut w = io::stdout();
-    let deck = deck::Deck {
-        slides: vec![deck::Slide {
-            headline: String::from("The Joy of Engineering"),
-            content: String::from(
-                "Presented by Udasi\ngithub - niftytyro\ntwitter - niftytyro\nblog - niftytyro.me",
-            ),
-        }],
-        current_idx: 0,
+pub fn render_slide<B: Backend>(f: &mut Frame<B>, slide: &Slide) {
+    let style = match slide.bg_color {
+        Some(color) => Style::default().bg(color),
+        None => Style::default(),
     };
 
-    execute!(w, terminal::EnterAlternateScreen).expect(ERROR_MESSAGE);
+    let parent_layout = Rect::new(f.size().x, f.size().y, f.size().width, f.size().height);
 
-    enable_raw_mode().expect(ERROR_MESSAGE);
+    f.render_widget(Block::default().style(style), parent_layout);
 
-    render_slide(&mut w, &deck.slides[deck.current_idx]);
+    let layout = Layout::default()
+        .direction(tui::layout::Direction::Vertical)
+        .constraints([Constraint::Percentage(20), Constraint::Min(80)])
+        .horizontal_margin(20)
+        .vertical_margin(5)
+        .split(parent_layout);
 
-    execute!(w, style::ResetColor).expect(ERROR_MESSAGE);
+    let title = Spans::from(Span::styled(
+        &slide.title,
+        Style::default().add_modifier(Modifier::UNDERLINED),
+    ));
 
-    disable_raw_mode().expect(ERROR_MESSAGE);
-}
+    let header = Paragraph::new(title)
+        .block(Block::default().style(style))
+        .style(Style::default().fg(Color::White))
+        .alignment(tui::layout::Alignment::Center)
+        .wrap(Wrap { trim: true });
 
-pub fn render_slide<W>(w: &mut W, current_slide: &deck::Slide)
-where
-    W: Write,
-{
-    let (width, height) = terminal::size().expect(ERROR_MESSAGE);
+    let text: Vec<Spans> = slide
+        .content
+        .split("\n")
+        .map(|line| Spans::from(line))
+        .collect();
 
-    loop {
-        let mut counter = 0;
-        queue!(
-            w,
-            style::ResetColor,
-            terminal::Clear(ClearType::All),
-            cursor::MoveTo(0, (height / 10) + counter),
-        )
-        .expect(ERROR_MESSAGE);
+    let content = Paragraph::new(text)
+        .block(Block::default().style(style))
+        .style(Style::default().fg(Color::White))
+        .wrap(Wrap { trim: false });
 
-        w.flush().expect(ERROR_MESSAGE);
+    f.render_widget(header, layout[0]);
 
-        let headline = &current_slide.headline;
-        let whitespace_len: usize = (width - (headline.len() as u16)).into();
-        let whitespace = " ".repeat(whitespace_len / 2);
-
-        let headline = String::from(format!("{}{}{}", whitespace, headline, whitespace));
-
-        counter += 3;
-
-        execute!(
-            w,
-            Print(headline),
-            cursor::MoveTo(width / 20, (height / 10) + counter)
-        )
-        .expect(ERROR_MESSAGE);
-
-        counter += 3;
-
-        for line in current_slide.content.split("\n") {
-            execute!(
-                w,
-                Print("\n"),
-                Print(line),
-                cursor::MoveTo(width / 20, (height / 10) + counter)
-            )
-            .expect(ERROR_MESSAGE);
-            counter += 1;
-        }
-
-        match read_char().expect(ERROR_MESSAGE) {
-            'q' => break,
-            _ => {}
-        };
-    }
-}
-
-pub fn read_char() -> Result<char> {
-    loop {
-        if let Ok(Event::Key(KeyEvent {
-            code: KeyCode::Char(c),
-            ..
-        })) = event::read()
-        {
-            return Ok(c);
-        }
-    }
+    f.render_widget(content, layout[1]);
 }
