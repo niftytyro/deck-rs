@@ -27,4 +27,16 @@ impl App {
             _ => (),
         };
     }
+
+    pub fn on_right(self: &mut Self) {
+        if self.slides.len() - 1 > self.current_idx {
+            self.current_idx += 1;
+        }
+    }
+
+    pub fn on_left(self: &mut Self) {
+        if self.current_idx > 0 {
+            self.current_idx -= 1;
+        }
+    }
 }

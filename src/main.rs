@@ -27,7 +27,14 @@ pub fn run() {
             "Presented by Udasi\n\ngithub  - niftytyro\ntwitter - niftytyro\nblog    - niftytyro.me",
         ),
         bg_color: Some(Color::Black),
-    }]);
+    },
+   Slide {
+        title: String::from("Engineers are Explorers"),
+        content: String::from(
+            "-  Learning\n-  Fearlessness\n-  Spirit of Exploration/Adventure\n-  And my personal favorite, spirit of pervertedness for tech",
+        ),
+        bg_color: Some(Color::Black),
+    } ]);
 
     run_app(&mut terminal, app);
 
@@ -46,6 +53,8 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) {
         if let Event::Key(key) = event::read().expect(ERROR_MESSAGE) {
             match key.code {
                 KeyCode::Char(c) => app.on_key(c),
+                KeyCode::Right => app.on_right(),
+                KeyCode::Left => app.on_left(),
                 _ => {}
             }
         }
