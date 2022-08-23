@@ -37,21 +37,21 @@ pub fn render_slide<B: Backend>(f: &mut Frame<B>, slide: &Slide) {
             .text_nodes
             .iter()
             .map(|text_node| {
-                let style = Style::default();
+                let mut style = Style::default();
 
                 for modifier in &text_node.modifiers {
                     match modifier {
                         SlideNodeModifier::BOLD => {
-                            style.add_modifier(Modifier::BOLD);
+                            style = style.add_modifier(Modifier::BOLD);
                         }
                         SlideNodeModifier::ITALIC => {
-                            style.add_modifier(Modifier::ITALIC);
+                            style = style.add_modifier(Modifier::ITALIC);
                         }
                         SlideNodeModifier::STRIKETHROUGH => {
-                            style.add_modifier(Modifier::CROSSED_OUT);
+                            style = style.add_modifier(Modifier::CROSSED_OUT);
                         }
                         SlideNodeModifier::UNDERLINE => {
-                            style.add_modifier(Modifier::UNDERLINED);
+                            style = style.add_modifier(Modifier::UNDERLINED);
                         }
                     }
                 }
