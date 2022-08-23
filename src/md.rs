@@ -1,51 +1,75 @@
 use crate::slide::{Slide, SlideNode, SlideNodeModifier, TextNode};
+use crate::ERROR_MESSAGE;
 
+use argh::FromArgs;
 use comrak::nodes::{AstNode, NodeValue};
 use comrak::{parse_document, Arena, ComrakOptions};
-use std::vec;
+use std::{fs, vec};
+use tui::layout::Alignment;
 use tui::style::Color;
+
+/// Presentations in the terminal
+#[derive(FromArgs)]
+struct Args {
+    /// path to the .md file
+    #[argh(option)]
+    path: String,
+}
+
+fn modify_node<'a>(
+    node: &'a AstNode<'a>,
+    slide_node: &mut SlideNode,
+    modifier: &dyn Fn(&mut TextNode) -> (),
+) -> Vec<TextNode> {
+    let mut modified_text_nodes = vec![];
+    for each in node.children() {
+        let text_nodes = iter_nodes(each, slide_node);
+        for mut text_node in text_nodes {
+            modifier(&mut text_node);
+            modified_text_nodes.push(text_node);
+        }
+    }
+
+    modified_text_nodes
+}
 
 fn iter_nodes<'a>(node: &'a AstNode<'a>, slide_node: &mut SlideNode) -> Vec<TextNode> {
     match &mut node.data.borrow_mut().value {
         &mut NodeValue::Text(ref mut text) => {
             let mut text_node = TextNode::new();
-            text_node.set_text(text);
+            text_node.text = String::from_utf8(text.clone()).expect(ERROR_MESSAGE);
 
             vec![text_node]
         }
         &mut NodeValue::Strong => {
-            let mut modified_text_nodes = vec![];
-            for each in node.children() {
-                let text_nodes = iter_nodes(each, slide_node);
-                for mut text_node in text_nodes {
-                    text_node.add_modifier(SlideNodeModifier::BOLD);
-                    modified_text_nodes.push(text_node);
-                }
-            }
+            let modified_text_nodes = modify_node(node, slide_node, &|text_node: &mut TextNode| {
+                text_node.modifiers.push(SlideNodeModifier::BOLD)
+            });
 
             modified_text_nodes
         }
         &mut NodeValue::Emph => {
-            let mut modified_text_nodes = vec![];
-            for each in node.children() {
-                let text_nodes = iter_nodes(each, slide_node);
-                for mut text_node in text_nodes {
-                    text_node.add_modifier(SlideNodeModifier::ITALIC);
-                    modified_text_nodes.push(text_node);
-                }
-            }
+            let modified_text_nodes = modify_node(node, slide_node, &|text_node: &mut TextNode| {
+                text_node.modifiers.push(SlideNodeModifier::ITALIC)
+            });
 
             modified_text_nodes
         }
         &mut NodeValue::Strikethrough => {
-            let mut modified_text_nodes = vec![];
-            for each in node.children() {
-                let text_nodes = iter_nodes(each, slide_node);
-                for mut text_node in text_nodes {
-                    text_node.add_modifier(SlideNodeModifier::STRIKETHROUGH);
-                    modified_text_nodes.push(text_node);
-                }
-            }
+            let modified_text_nodes = modify_node(node, slide_node, &|text_node: &mut TextNode| {
+                text_node.modifiers.push(SlideNodeModifier::STRIKETHROUGH)
+            });
+
+            modified_text_nodes
+        }
+        &mut NodeValue::Heading(_) => {
+            slide_node.alignment = Alignment::Center;
+            let modified_text_nodes = modify_node(node, slide_node, &|text_node: &mut TextNode| {
+                text_node.modifiers.append(&mut vec![
+                    SlideNodeModifier::BOLD,
+                    SlideNodeModifier::UNDERLINE,
+                ]);
+            });
 
             modified_text_nodes
         }
@@ -76,8 +100,15 @@ pub fn generate_slide(slide: &str) -> Slide {
     slide
 }
 
-pub fn generate_slides() {
-    let input = "Hello, **world\nworldie**!";
+pub fn generate_slides() -> Vec<Slide> {
+    let args: Args = argh::from_env();
+    let input = fs::read_to_string(args.path).expect(ERROR_MESSAGE);
 
-    let slide = generate_slide(input);
+    let mut slides: Vec<Slide> = vec![];
+
+    for slide in input.split("---").collect::<Vec<&str>>() {
+        slides.push(generate_slide(slide));
+    }
+
+    slides
 }

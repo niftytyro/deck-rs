@@ -5,13 +5,12 @@ mod ui;
 
 use std::io;
 
-use app::{App, Slide};
+use app::App;
 use crossterm::event::{self, Event, KeyCode};
 use crossterm::terminal::{self, disable_raw_mode};
 use crossterm::{execute, terminal::enable_raw_mode};
 use md::generate_slides;
 use tui::backend::{Backend, CrosstermBackend};
-use tui::style::Color;
 use tui::Terminal;
 
 const ERROR_MESSAGE: &str = "Something went wrong";
@@ -24,20 +23,7 @@ pub fn run() {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend).expect(ERROR_MESSAGE);
 
-    let app = App::new(vec![Slide {
-        title: String::from("The Joy of Engineering"),
-        content: String::from(
-            "Presented by Udasi\n\ngithub  - niftytyro\ntwitter - niftytyro\nblog    - niftytyro.me",
-        ),
-        bg_color: Some(Color::Black),
-    },
-   Slide {
-        title: String::from("Engineers are Explorers"),
-        content: String::from(
-            "-  Learning\n-  Fearlessness\n-  Spirit of Exploration/Adventure\n-  And my personal favorite, spirit of pervertedness for tech",
-        ),
-        bg_color: Some(Color::Black),
-    } ]);
+    let app = App::new(generate_slides());
 
     run_app(&mut terminal, app);
 
@@ -68,6 +54,5 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) {
 }
 
 fn main() {
-    // run();
-    generate_slides();
+    run();
 }

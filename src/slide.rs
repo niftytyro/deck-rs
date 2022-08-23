@@ -1,13 +1,12 @@
 use std::fmt;
-use tui::style::Color;
-
-use crate::ERROR_MESSAGE;
+use tui::{layout::Alignment, style::Color};
 
 #[derive(Debug)]
 pub enum SlideNodeModifier {
     BOLD,
     ITALIC,
     STRIKETHROUGH,
+    UNDERLINE,
 }
 
 pub struct Slide {
@@ -18,6 +17,7 @@ pub struct Slide {
 
 pub struct SlideNode {
     pub text_nodes: Vec<TextNode>,
+    pub alignment: Alignment,
 }
 
 pub struct TextNode {
@@ -59,7 +59,10 @@ impl fmt::Debug for TextNode {
 
 impl SlideNode {
     pub fn new() -> SlideNode {
-        SlideNode { text_nodes: vec![] }
+        SlideNode {
+            text_nodes: vec![],
+            alignment: Alignment::Left,
+        }
     }
 
     pub fn set_text_nodes(self: &mut Self, text_nodes: Vec<TextNode>) {
@@ -73,13 +76,5 @@ impl TextNode {
             text: String::from(""),
             modifiers: vec![],
         }
-    }
-
-    pub fn add_modifier(self: &mut Self, modifier: SlideNodeModifier) {
-        self.modifiers.push(modifier);
-    }
-
-    pub fn set_text(self: &mut Self, bytes: &Vec<u8>) {
-        self.text = String::from_utf8(bytes.clone()).expect(ERROR_MESSAGE);
     }
 }

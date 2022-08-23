@@ -1,10 +1,4 @@
-use tui::style::Color;
-
-pub struct Slide {
-    pub title: String,
-    pub content: String,
-    pub bg_color: Option<Color>,
-}
+use crate::slide::Slide;
 
 pub struct App {
     pub slides: Vec<Slide>,
