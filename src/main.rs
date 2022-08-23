@@ -1,4 +1,6 @@
 mod app;
+mod md;
+mod slide;
 mod ui;
 
 use std::io;
@@ -7,6 +9,7 @@ use app::{App, Slide};
 use crossterm::event::{self, Event, KeyCode};
 use crossterm::terminal::{self, disable_raw_mode};
 use crossterm::{execute, terminal::enable_raw_mode};
+use md::generate_slides;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::style::Color;
 use tui::Terminal;
@@ -65,5 +68,6 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) {
 }
 
 fn main() {
-    run();
+    // run();
+    generate_slides();
 }
