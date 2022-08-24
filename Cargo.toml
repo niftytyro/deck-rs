@@ -1,7 +1,13 @@
 [package]
 name = "deck-rs"
 version = "0.1.0"
+authors = ["Udasi <udasitharani@gmail.com>"]
 edition = "2021"
+description = "Presentations in the terminal"
+repository = "https://github.com/niftytyro/deck-rs"
+license = "MIT OR Apache-2.0"
+keywords = ["terminal", "tui", "markdown", "slides", "deck", "presentation"]
+categories = ["command-line-utilities", "command-line-interface", "template-engine"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
